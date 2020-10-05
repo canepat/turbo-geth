@@ -8,8 +8,9 @@ import (
 	"sort"
 	"time"
 
+	"github.com/ledgerwatch/turbo-geth/common/debug"
 	"github.com/ledgerwatch/turbo-geth/ethdb/cbor"
-
+	"github.com/valyala/gozstd"
 	"github.com/RoaringBitmap/roaring"
 	"github.com/c2h5oh/datasize"
 	"github.com/ledgerwatch/turbo-geth/common"
@@ -126,6 +127,15 @@ func promoteLogIndex(db ethdb.DbWithPendingMutations, start uint64, quit <-chan 
 			}
 		}
 
+		if debug.IsReceiptsCompressionEnabled() {
+			var err error
+			v, err = gozstd.DecompressDict(nil, v, dbutils.CompressionDicts.DReceipts)
+			if err != nil {
+				log.Error("receipt decompress failed", "blockNum", blockNum, "err", err)
+				return nil
+			}
+		}
+
 		receipts := types.Receipts{}
 		if err := cbor.Unmarshal(&receipts, v); err != nil {
 			return fmt.Errorf("receipt unmarshal failed: %w, blocl=%d", err, blockNum)
@@ -209,6 +219,15 @@ func unwindLogIndex(db ethdb.DbWithPendingMutations, from, to uint64, quitCh <-c
 		}
 		if err := common.Stopped(quitCh); err != nil {
 			return err
+		}
+
+		if debug.IsReceiptsCompressionEnabled() {
+			var err error
+			v, err = gozstd.DecompressDict(nil, v, dbutils.CompressionDicts.DReceipts)
+			if err != nil {
+				log.Error("receipt decompress failed", "blockNum", binary.BigEndian.Uint64(k[:8]), "err", err)
+				return nil
+			}
 		}
 		receipts := types.Receipts{}
 		if err := cbor.Unmarshal(&receipts, v); err != nil {
