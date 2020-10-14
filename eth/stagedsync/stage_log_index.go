@@ -8,17 +8,17 @@ import (
 	"sort"
 	"time"
 
-	"github.com/ledgerwatch/turbo-geth/common/debug"
-	"github.com/ledgerwatch/turbo-geth/ethdb/cbor"
-	"github.com/valyala/gozstd"
 	"github.com/RoaringBitmap/roaring"
 	"github.com/c2h5oh/datasize"
 	"github.com/ledgerwatch/turbo-geth/common"
 	"github.com/ledgerwatch/turbo-geth/common/dbutils"
+	"github.com/ledgerwatch/turbo-geth/common/debug"
 	"github.com/ledgerwatch/turbo-geth/core/types"
 	"github.com/ledgerwatch/turbo-geth/ethdb"
 	"github.com/ledgerwatch/turbo-geth/ethdb/bitmapdb"
+	"github.com/ledgerwatch/turbo-geth/ethdb/cbor"
 	"github.com/ledgerwatch/turbo-geth/log"
+	"github.com/valyala/gozstd"
 )
 
 const (
