@@ -260,7 +260,7 @@ func (db *ObjectDatabase) ClearBuckets(buckets ...string) error {
 					return nil
 				}
 				var deleted uint64
-				for k, _, err := c.First(); k != nil; k, _, err = c.Next() {
+				for k, _, err := c.First(); k != nil; k, _, err = c.First() {
 					if err != nil {
 						return err
 					}
