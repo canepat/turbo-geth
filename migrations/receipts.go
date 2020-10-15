@@ -12,7 +12,7 @@ import (
 )
 
 var receiptsCborEncode = Migration{
-	Name: "receipts_cbor_encode_experiment_mdbx2",
+	Name: "receipts_cbor_encode_experiment_mdbx3",
 	Up: func(db ethdb.Database, datadir string, OnLoadCommit etl.LoadCommitHandler) error {
 		logEvery := time.NewTicker(30 * time.Second)
 		defer logEvery.Stop()
@@ -30,7 +30,10 @@ var receiptsCborEncode = Migration{
 				return false, err
 			}
 
-			return true, db.Put(dbutils.BlockReceiptsPrefix, common.CopyBytes(k), common.CopyBytes(buf))
+			if err := db.Put(dbutils.BlockReceiptsPrefix, common.CopyBytes(k), common.CopyBytes(buf)); err != nil {
+				return false, err
+			}
+			return true, nil
 		}); err != nil {
 			return err
 		}
