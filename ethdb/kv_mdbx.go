@@ -472,6 +472,7 @@ func (tx *mdbxTx) dropEvenIfBucketIsNotDeprecated(name string) error {
 		}
 		dbi = dbutils.DBI(nativeDBI)
 	}
+	fmt.Printf("Drop: %s\n", name)
 	if err := tx.tx.Drop(mdbx.DBI(dbi), true); err != nil {
 		return err
 	}
