@@ -241,52 +241,12 @@ func (db *ObjectDatabase) BucketExists(name string) (bool, error) {
 }
 
 func (db *ObjectDatabase) ClearBuckets(buckets ...string) error {
-	logEvery := time.NewTicker(30 * time.Second)
-	defer logEvery.Stop()
-
 	for i := range buckets {
 		name := buckets[i]
-		var partialDropDone bool
-		var deleteKeysPerTx uint64 = 1_000_000
-		for !partialDropDone {
-			if err := db.kv.Update(context.Background(), func(tx Tx) error {
-				c := tx.Cursor(name)
-				cnt, err := c.Count()
-				if err != nil {
-					return err
-				}
-				if cnt < deleteKeysPerTx {
-					partialDropDone = true
-					return nil
-				}
-				var deleted uint64
-				for k, _, err := c.First(); k != nil; k, _, err = c.First() {
-					if err != nil {
-						return err
-					}
-					deleted++
-					if deleted > deleteKeysPerTx {
-						break
-					}
-
-					err = c.DeleteCurrent()
-					if err != nil {
-						return err
-					}
-
-					select {
-					default:
-					case <-logEvery.C:
-						log.Info("ClearBuckets", "bucket", name, "records_left", cnt-deleted)
-					}
-				}
-
-				return nil
-			}); err != nil {
-				return fmt.Errorf("partial clean failed. bucket=%s, %w", name, err)
-			}
+		log.Info("Cleaning bucket", "name", name)
+		if err := db.removeBucketContentByMultipleTransactions(name); err != nil {
+			return err
 		}
-
 		if err := db.kv.Update(context.Background(), func(tx Tx) error {
 			migrator, ok := tx.(BucketMigrator)
 			if !ok {
@@ -304,10 +264,63 @@ func (db *ObjectDatabase) ClearBuckets(buckets ...string) error {
 	return nil
 }
 
+// removeBucketContentByMultipleTransactions - allows to avoid single large freelist record inside database and
+// avoid "too big transaction" error
+func (db *ObjectDatabase) removeBucketContentByMultipleTransactions(bucket string) error {
+	logEvery := time.NewTicker(30 * time.Second)
+	defer logEvery.Stop()
+
+	var partialDropDone bool
+	var deleteKeysPerTx uint64 = 1_000_000
+	for !partialDropDone {
+		if err := db.kv.Update(context.Background(), func(tx Tx) error {
+			c := tx.Cursor(bucket)
+			cnt, err := c.Count()
+			if err != nil {
+				return err
+			}
+			if cnt < deleteKeysPerTx {
+				partialDropDone = true
+				return nil
+			}
+			var deleted uint64
+			for k, _, err := c.First(); k != nil; k, _, err = c.First() {
+				if err != nil {
+					return err
+				}
+				deleted++
+				if deleted > deleteKeysPerTx {
+					break
+				}
+
+				err = c.DeleteCurrent()
+				if err != nil {
+					return err
+				}
+
+				select {
+				default:
+				case <-logEvery.C:
+					log.Info("ClearBuckets", "bucket", bucket, "records_left", cnt-deleted)
+				}
+			}
+
+			return nil
+		}); err != nil {
+			return fmt.Errorf("partial clean failed. bucket=%s, %w", bucket, err)
+		}
+	}
+
+	return nil
+}
+
 func (db *ObjectDatabase) DropBuckets(buckets ...string) error {
 	for i := range buckets {
 		name := buckets[i]
 		log.Info("Dropping bucket", "name", name)
+		if err := db.removeBucketContentByMultipleTransactions(name); err != nil {
+			return err
+		}
 		if err := db.kv.Update(context.Background(), func(tx Tx) error {
 			migrator, ok := tx.(BucketMigrator)
 			if !ok {

@@ -407,32 +407,9 @@ func (m *TxDb) BucketExists(name string) (bool, error) {
 }
 
 func (m *TxDb) ClearBuckets(buckets ...string) error {
-	for i := range buckets {
-		name := buckets[i]
-
-		migrator, ok := m.tx.(BucketMigrator)
-		if !ok {
-			return fmt.Errorf("%T doesn't implement ethdb.TxMigrator interface", m.tx)
-		}
-		if err := migrator.ClearBucket(name); err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return fmt.Errorf("don't drop buckets in single transaction, it producing too large freelist records. Use ObjectDB to drop buckets.")
 }
 
 func (m *TxDb) DropBuckets(buckets ...string) error {
-	for i := range buckets {
-		name := buckets[i]
-		log.Info("Dropping bucket", "name", name)
-		migrator, ok := m.tx.(BucketMigrator)
-		if !ok {
-			return fmt.Errorf("%T doesn't implement ethdb.TxMigrator interface", m.tx)
-		}
-		if err := migrator.DropBucket(name); err != nil {
-			return err
-		}
-	}
-	return nil
+	return fmt.Errorf("don't drop buckets in single transaction, it producing too large freelist records. Use ObjectDB to drop buckets.")
 }
