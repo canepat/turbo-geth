@@ -24,12 +24,11 @@ var receiptsCborEncode = Migration{
 			case <-logEvery.C:
 				log.Info("Migration progress", "blockNum", blockNum)
 			}
-
-			if err := db.Delete(dbutils.BlockReceiptsPrefix, common.CopyBytes(k)); err != nil {
+			k, v = common.CopyBytes(k), common.CopyBytes(v)
+			if err := db.Delete(dbutils.BlockReceiptsPrefix, k); err != nil {
 				return false, err
 			}
-
-			if err := db.Put(dbutils.BlockReceiptsPrefix, common.CopyBytes(k), common.CopyBytes(v)); err != nil {
+			if err := db.Put(dbutils.BlockReceiptsPrefix, k, v); err != nil {
 				return false, err
 			}
 			return true, nil
