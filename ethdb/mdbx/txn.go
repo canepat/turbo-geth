@@ -11,6 +11,7 @@ import (
 	"log"
 	"runtime"
 	"unsafe"
+	"fmt"
 )
 
 // This flags are used exclusively for Txn.OpenDBI and Txn.OpenRoot.  The
