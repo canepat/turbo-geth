@@ -31,8 +31,8 @@ func (m *mutation) KV() KV {
 }
 
 func (m *mutation) getMem(bucket string, key []byte) ([]byte, bool) {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
+	//m.mu.RLock()
+	//defer m.mu.RUnlock()
 	return m.puts.get(bucket, key)
 }
 
@@ -66,8 +66,8 @@ func (m *mutation) GetIndexChunk(bucket string, key []byte, timestamp uint64) ([
 }
 
 func (m *mutation) hasMem(bucket string, key []byte) bool {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
+	//m.mu.RLock()
+	//defer m.mu.RUnlock()
 	_, ok := m.puts.get(bucket, key)
 	return ok
 }
@@ -94,24 +94,24 @@ func (m *mutation) DiskSize(ctx context.Context) (common.StorageSize, error) {
 }
 
 func (m *mutation) Put(bucket string, key []byte, value []byte) error {
-	m.mu.Lock()
-	defer m.mu.Unlock()
+	//m.mu.Lock()
+	//defer m.mu.Unlock()
 
 	m.puts.set(bucket, key, value)
 	return nil
 }
 
 func (m *mutation) Append(bucket string, key []byte, value []byte) error {
-	m.mu.Lock()
-	defer m.mu.Unlock()
+	//m.mu.Lock()
+	//defer m.mu.Unlock()
 
 	m.puts.set(bucket, key, value)
 	return nil
 }
 
 func (m *mutation) MultiPut(tuples ...[]byte) (uint64, error) {
-	m.mu.Lock()
-	defer m.mu.Unlock()
+	//m.mu.Lock()
+	//defer m.mu.Unlock()
 	l := len(tuples)
 	for i := 0; i < l; i += 3 {
 		m.puts.set(string(tuples[i]), tuples[i+1], tuples[i+2])
@@ -120,8 +120,8 @@ func (m *mutation) MultiPut(tuples ...[]byte) (uint64, error) {
 }
 
 func (m *mutation) BatchSize() int {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
+	//m.mu.RLock()
+	//defer m.mu.RUnlock()
 	return m.puts.Size()
 }
 
@@ -143,8 +143,8 @@ func (m *mutation) MultiWalk(bucket string, startkeys [][]byte, fixedbits []int,
 }
 
 func (m *mutation) Delete(bucket string, key []byte) error {
-	m.mu.Lock()
-	defer m.mu.Unlock()
+	//m.mu.Lock()
+	//defer m.mu.Unlock()
 	m.puts.Delete(bucket, key)
 	return nil
 }
@@ -163,8 +163,8 @@ func (m *mutation) Commit() (uint64, error) {
 	if m.db == nil {
 		return 0, nil
 	}
-	m.mu.Lock()
-	defer m.mu.Unlock()
+	//m.mu.Lock()
+	//defer m.mu.Unlock()
 	if m.tuples == nil {
 		m.tuples = make(MultiPutTuples, 0, m.puts.Len()*3)
 	}
@@ -190,15 +190,15 @@ func (m *mutation) Commit() (uint64, error) {
 }
 
 func (m *mutation) Rollback() {
-	m.mu.Lock()
-	defer m.mu.Unlock()
+	//m.mu.Lock()
+	//defer m.mu.Unlock()
 	m.puts = newPuts()
 	m.tuples = nil
 }
 
 func (m *mutation) Keys() ([][]byte, error) {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
+	//m.mu.RLock()
+	//defer m.mu.RUnlock()
 	tuples := common.NewTuples(m.puts.Len(), 2, 1)
 	for bucketStr, bt := range m.puts.mp {
 		bucketB := []byte(bucketStr)
