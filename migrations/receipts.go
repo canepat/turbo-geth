@@ -2,7 +2,6 @@ package migrations
 
 import (
 	"encoding/binary"
-	"runtime"
 	"time"
 
 	"github.com/ledgerwatch/turbo-geth/common"
@@ -24,9 +23,7 @@ var receiptsCborEncode = Migration{
 			select {
 			default:
 			case <-logEvery.C:
-				var m runtime.MemStats
-				runtime.ReadMemStats(&m)
-				log.Info("Migration progress", "blockNum", blockNum, "alloc", common.StorageSize(m.Alloc), "sys", common.StorageSize(m.Sys))
+				log.Info("Migration progress", "blockNum", blockNum)
 			}
 
 			if err := db.Delete(dbutils.BlockReceiptsPrefix, common.CopyBytes(k)); err != nil {
