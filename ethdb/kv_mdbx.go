@@ -1211,7 +1211,10 @@ func (c *MdbxCursor) Append(k []byte, v []byte) error {
 		return c.appendDup(k, v)
 	}
 
-	return c.append(k, v)
+	if err := c.append(k, v); err != nil {
+		return fmt.Errorf("append: %w\n", err)
+	}
+	return nil
 }
 
 func (c *MdbxCursor) Close() {
