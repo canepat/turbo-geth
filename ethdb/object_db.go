@@ -243,6 +243,41 @@ func (db *ObjectDatabase) BucketExists(name string) (bool, error) {
 func (db *ObjectDatabase) ClearBuckets(buckets ...string) error {
 	for i := range buckets {
 		name := buckets[i]
+		var partialDropDone bool
+		var deleteKeysPerTx uint64 = 1_000_000
+		for !partialDropDone {
+			if err := db.kv.Update(context.Background(), func(tx Tx) error {
+				c := tx.Cursor(name)
+				cnt, err := c.Count()
+				if err != nil {
+					return err
+				}
+				if cnt < deleteKeysPerTx {
+					partialDropDone = true
+					return nil
+				}
+				var deleted uint64
+				for k, _, err := c.First(); k != nil; k, _, err = c.Next() {
+					if err != nil {
+						return err
+					}
+					deleted++
+					if deleted > deleteKeysPerTx {
+						break
+					}
+
+					err = c.DeleteCurrent()
+					if err != nil {
+						return err
+					}
+				}
+
+				return nil
+			}); err != nil {
+				return fmt.Errorf("partial clean failed. bucket=%s, %w", name, err)
+			}
+		}
+
 		if err := db.kv.Update(context.Background(), func(tx Tx) error {
 			migrator, ok := tx.(BucketMigrator)
 			if !ok {
