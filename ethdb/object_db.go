@@ -276,7 +276,7 @@ func (db *ObjectDatabase) ClearBuckets(buckets ...string) error {
 
 					select {
 					case <-logEvery.C:
-						log.Info("ClearBuckets", "bucket", name, "records_left", cnt)
+						log.Info("ClearBuckets", "bucket", name, "records_left", cnt-deleted)
 					}
 				}
 
