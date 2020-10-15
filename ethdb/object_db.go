@@ -241,6 +241,9 @@ func (db *ObjectDatabase) BucketExists(name string) (bool, error) {
 }
 
 func (db *ObjectDatabase) ClearBuckets(buckets ...string) error {
+	logEvery := time.NewTicker(30 * time.Second)
+	defer logEvery.Stop()
+
 	for i := range buckets {
 		name := buckets[i]
 		var partialDropDone bool
@@ -269,6 +272,11 @@ func (db *ObjectDatabase) ClearBuckets(buckets ...string) error {
 					err = c.DeleteCurrent()
 					if err != nil {
 						return err
+					}
+
+					select {
+					case <-logEvery.C:
+						log.Info("ClearBuckets", "bucket", name, "records_left", cnt)
 					}
 				}
 
