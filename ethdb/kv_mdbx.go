@@ -484,7 +484,7 @@ func (tx *mdbxTx) dropEvenIfBucketIsNotDeprecated(name string) error {
 
 func (tx *mdbxTx) ClearBucket(bucket string) error {
 	if err := tx.dropEvenIfBucketIsNotDeprecated(bucket); err != nil {
-		return nil
+		return err
 	}
 	return tx.CreateBucket(bucket)
 }
