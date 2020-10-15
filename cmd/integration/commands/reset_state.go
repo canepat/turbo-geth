@@ -146,7 +146,6 @@ func resetSenders(db rawdb.DatabaseWriter) error {
 }
 
 func resetExec(db rawdb.DatabaseWriter) error {
-	fmt.Printf("1: ??\n")
 	if err := db.(ethdb.BucketsMigrator).ClearBuckets(
 		dbutils.CurrentStateBucket,
 		dbutils.AccountChangeSetBucket,

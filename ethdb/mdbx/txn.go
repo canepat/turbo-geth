@@ -8,10 +8,10 @@ package mdbx
 import "C"
 
 import (
+	"fmt"
 	"log"
 	"runtime"
 	"unsafe"
-	"fmt"
 )
 
 // This flags are used exclusively for Txn.OpenDBI and Txn.OpenRoot.  The
@@ -442,7 +442,6 @@ func (txn *Txn) StatDBI(dbi DBI) (*Stat, error) {
 // See mdbx_drop.
 func (txn *Txn) Drop(dbi DBI, del bool) error {
 	ret := C.mdbx_drop(txn._txn, C.MDBX_dbi(dbi), C.bool(del))
-	fmt.Printf("Drop1: %d, %d, %+v\n", dbi, ret, operrno("mdbx_drop", ret))
 	return operrno("mdbx_drop", ret)
 }
 
