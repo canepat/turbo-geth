@@ -8,7 +8,6 @@ package mdbx
 import "C"
 
 import (
-	"fmt"
 	"log"
 	"runtime"
 	"unsafe"
