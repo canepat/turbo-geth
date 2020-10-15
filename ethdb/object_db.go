@@ -245,6 +245,8 @@ func (db *ObjectDatabase) ClearBuckets(buckets ...string) error {
 		name := buckets[i]
 		fmt.Printf("individual tx: %s\n", name)
 		if err := db.kv.Update(context.Background(), func(tx Tx) error {
+			sz, err := tx.BucketSize(name)
+			fmt.Printf("sz: %d %s\n", sz, err)
 			migrator, ok := tx.(BucketMigrator)
 			if !ok {
 				return fmt.Errorf("%T doesn't implement ethdb.TxMigrator interface", db.kv)
