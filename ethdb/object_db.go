@@ -243,6 +243,7 @@ func (db *ObjectDatabase) BucketExists(name string) (bool, error) {
 func (db *ObjectDatabase) ClearBuckets(buckets ...string) error {
 	for i := range buckets {
 		name := buckets[i]
+		fmt.Printf("individual tx: %s\n", name)
 		if err := db.kv.Update(context.Background(), func(tx Tx) error {
 			migrator, ok := tx.(BucketMigrator)
 			if !ok {
