@@ -2,22 +2,18 @@ package migrations
 
 import (
 	"encoding/binary"
-	"fmt"
 	"runtime"
 	"time"
 
 	"github.com/ledgerwatch/turbo-geth/common"
 	"github.com/ledgerwatch/turbo-geth/common/dbutils"
 	"github.com/ledgerwatch/turbo-geth/common/etl"
-	"github.com/ledgerwatch/turbo-geth/core/types"
 	"github.com/ledgerwatch/turbo-geth/ethdb"
-	"github.com/ledgerwatch/turbo-geth/ethdb/cbor"
 	"github.com/ledgerwatch/turbo-geth/log"
-	"github.com/ledgerwatch/turbo-geth/rlp"
 )
 
 var receiptsCborEncode = Migration{
-	Name: "receipts_cbor_encode",
+	Name: "receipts_cbor_encode_experiment_mdbx2",
 	Up: func(db ethdb.Database, datadir string, OnLoadCommit etl.LoadCommitHandler) error {
 		logEvery := time.NewTicker(30 * time.Second)
 		defer logEvery.Stop()
@@ -33,16 +29,10 @@ var receiptsCborEncode = Migration{
 				log.Info("Migration progress", "blockNum", blockNum, "alloc", common.StorageSize(m.Alloc), "sys", common.StorageSize(m.Sys))
 			}
 
-			// Convert the receipts from their storage form to their internal representation
-			storageReceipts := []*types.ReceiptForStorage{}
-			if err := rlp.DecodeBytes(v, &storageReceipts); err != nil {
-				return false, fmt.Errorf("invalid receipt array RLP: %w, k=%x", err, k)
-			}
-
-			buf = buf[:0]
-			if err := cbor.Marshal(&buf, storageReceipts); err != nil {
+			if err := db.Delete(dbutils.BlockReceiptsPrefix, common.CopyBytes(k)); err != nil {
 				return false, err
 			}
+
 			return true, db.Put(dbutils.BlockReceiptsPrefix, common.CopyBytes(k), common.CopyBytes(buf))
 		}); err != nil {
 			return err
